@@ -16,6 +16,7 @@ import usePresentationMode from '../hooks/use-presentation-mode'
 import useMouseWheelZoom from '../hooks/use-mouse-wheel-zoom'
 import { PDFJS } from '../util/pdf-js'
 import { PDFFile } from '@ol-types/compile'
+import { PdfSelectionComment } from './pdf-selection-comment'
 
 type PdfJsViewerProps = {
   url: string
@@ -530,6 +531,7 @@ function PdfJsViewer({ url, pdfFile }: PdfJsViewerProps) {
           pdfContainer={pdfJsWrapper?.container}
         />
       )}
+      <PdfSelectionComment pdfJsWrapper={pdfJsWrapper} />
     </div>
   )
 }

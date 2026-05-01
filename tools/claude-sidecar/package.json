@@ -1,0 +1,20 @@
+{
+  "name": "@overleaf/claude-sidecar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local sidecar that bridges Overleaf web service to Claude Agent SDK using the host user's Claude Code authentication.",
+  "main": "src/server.mjs",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "dev": "node --watch src/server.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.0",
+    "express": "^4.21.0",
+    "yaml": "^2.6.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

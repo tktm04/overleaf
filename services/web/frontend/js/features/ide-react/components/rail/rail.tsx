@@ -12,6 +12,8 @@ import ChatIndicator from '@/features/chat/components/chat-indicator'
 import getMeta from '@/utils/meta'
 import classNames from 'classnames'
 import IntegrationsPanel from '@/features/integrations-panel/integrations-panel'
+import ClaudeRailPanel from '@/features/claude-review/components/claude-rail-panel'
+import { ClaudeRailIcon } from '@/features/claude-review/components/claude-rail-icon'
 import { useChatContext } from '@/features/chat/context/chat-context'
 import { useEditorAnalytics } from '@/shared/hooks/use-editor-analytics'
 import {
@@ -120,6 +122,13 @@ export const RailLayout = () => {
         title: t('review_panel'),
         component: null,
         hide: !features.trackChangesVisible,
+        disabled: view !== 'editor',
+      },
+      {
+        key: 'claude',
+        icon: ClaudeRailIcon,
+        title: 'Claude',
+        component: <ClaudeRailPanel />,
         disabled: view !== 'editor',
       },
       {

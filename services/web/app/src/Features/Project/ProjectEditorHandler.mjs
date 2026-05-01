@@ -2,8 +2,12 @@ import _ from 'lodash'
 import Path from 'node:path'
 let ProjectEditorHandler
 
+// Self-hosted unlock: CE hard-codes Server Pro features to false. Set
+// OVERLEAF_UNLOCK_PRO=true in dev.env to flip them on for personal use.
+const UNLOCK_PRO = process.env.OVERLEAF_UNLOCK_PRO === 'true'
+
 export default ProjectEditorHandler = {
-  trackChangesAvailable: false,
+  trackChangesAvailable: UNLOCK_PRO,
 
   buildProjectModelView(
     project,

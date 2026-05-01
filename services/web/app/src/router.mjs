@@ -35,6 +35,8 @@ import ExportsController from './Features/Exports/ExportsController.mjs'
 import PasswordResetRouter from './Features/PasswordReset/PasswordResetRouter.mjs'
 import StaticPagesRouter from './Features/StaticPages/StaticPagesRouter.mjs'
 import ChatController from './Features/Chat/ChatController.mjs'
+import ThreadsController from './Features/Chat/ThreadsController.mjs'
+import ClaudeReviewController from './Features/ClaudeReview/ClaudeReviewController.mjs'
 import Modules from './infrastructure/Modules.mjs'
 import {
   RateLimiter,
@@ -1046,6 +1048,108 @@ async function initialize(webRouter, privateApiRouter, publicApiRouter) {
       AuthorizationMiddleware.ensureUserIsMessageAuthor,
       PermissionsController.requirePermission('chat'),
       ChatController.editMessage
+    )
+    // The frontend (review-panel/threads-context) uses paths that include
+    // the doc id, e.g. POST /project/:p/doc/:d/thread/:t/messages. The chat
+    // service ignores the doc id so we just accept it in the URL.
+    webRouter.get(
+      '/project/:project_id/threads',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ThreadsController.getThreads
+    )
+    webRouter.post(
+      '/project/:project_id/(doc/:doc_id/)?thread/:thread_id/messages',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      RateLimiterMiddleware.rateLimit(rateLimiters.sendChatMessage),
+      ThreadsController.sendComment
+    )
+    webRouter.post(
+      '/project/:project_id/(doc/:doc_id/)?thread/:thread_id/resolve',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ThreadsController.resolveThread
+    )
+    webRouter.post(
+      '/project/:project_id/(doc/:doc_id/)?thread/:thread_id/reopen',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ThreadsController.reopenThread
+    )
+    webRouter.delete(
+      '/project/:project_id/(doc/:doc_id/)?thread/:thread_id',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ThreadsController.deleteThread
+    )
+    webRouter.post(
+      '/project/:project_id/(doc/:doc_id/)?thread/:thread_id/messages/:message_id/edit',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ThreadsController.editMessage
+    )
+    webRouter.delete(
+      '/project/:project_id/(doc/:doc_id/)?thread/:thread_id/messages/:message_id',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ThreadsController.deleteMessage
+    )
+    webRouter.post(
+      '/project/:project_id/claude/review',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ClaudeReviewController.review
+    )
+    webRouter.post(
+      '/project/:project_id/claude/chat',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ClaudeReviewController.chat
+    )
+    webRouter.get(
+      '/project/:project_id/claude/config',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ClaudeReviewController.getConfig
+    )
+    webRouter.put(
+      '/project/:project_id/claude/config',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanWriteProjectContent,
+      PermissionsController.requirePermission('chat'),
+      ClaudeReviewController.putConfig
+    )
+    webRouter.get(
+      '/project/:project_id/claude/edits',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ClaudeReviewController.listEdits
+    )
+    webRouter.post(
+      '/project/:project_id/claude/edits/:edit_id/apply',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanWriteProjectContent,
+      PermissionsController.requirePermission('chat'),
+      ClaudeReviewController.applyEdit
+    )
+    webRouter.post(
+      '/project/:project_id/claude/edits/:edit_id/skip',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ClaudeReviewController.skipEdit
     )
   }
 

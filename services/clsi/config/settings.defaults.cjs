@@ -57,7 +57,13 @@ module.exports = {
       outputUrlPrefix: `${process.env.ZONE ? `/zone/${process.env.ZONE}` : ''}`,
       clsiServerId: process.env.CLSI_SERVER_ID || CLSI_SERVER_ID,
 
-      downloadHost: process.env.DOWNLOAD_HOST || 'http://localhost:8080',
+      // DOWNLOAD_HOST may arrive either as a full URL (http://host:port) or as
+      // a bare hostname (e.g. "clsi-nginx") to stay aligned with web service
+      // which always prefixes scheme + :8080. Auto-prefix when missing.
+      downloadHost: (() => {
+        const dh = process.env.DOWNLOAD_HOST || 'http://localhost:8080'
+        return /^https?:\/\//.test(dh) ? dh : `http://${dh}:8080`
+      })(),
     },
     clsiPerf: {
       host: `${process.env.CLSI_PERF_HOST || '127.0.0.1'}:${

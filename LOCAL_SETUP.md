@@ -97,6 +97,128 @@ bin/dev web webpack      # 一部サービスだけ dev モード
 | history-v1 | 9239 |
 | project-history | 9240 |
 
+## Claude Review 機能（fork 拡張）
+
+`Ask Claude` ボタンで未解決コメントを Claude に投げ、提案を thread に返信させる
+機能。Claude は **ホスト側で動く claude-sidecar** 経由で呼ばれ、Claude Code の
+サブスク認証を流用する（API キー不要）。
+
+### 1. ホストで `claude` をログイン
+
+```bash
+claude /login   # 一度だけ
+```
+
+### 2. sidecar を起動
+
+```bash
+cd tools/claude-sidecar
+npm install
+npm start          # 127.0.0.1:8888 で待ち受け
+```
+
+別タブで動かしっぱなしにする。`npm run dev` だと watch モード。
+
+### 3. Overleaf web の env 設定（既に dev.env に入っている）
+
+```
+OVERLEAF_CLAUDE_SIDECAR_URL=http://host.docker.internal:8888
+```
+
+dev.env を変更したら `docker compose up -d web` で再起動。
+
+### 4. プロジェクトの設定（GUI推奨）
+
+レビューパネル右上の **⚙ Configure Claude** ボタンから設定モーダルを開いて
+保存すれば、`_claude/config.json` が自動生成される。手書きしたい場合の
+スキーマ:
+
+```json
+{
+  "sidecar_url": "",
+  "experiment_repo": "/Users/tkdtmhs04/my_dev/typography-jailbreak/papers/neurips2026",
+  "allowed_tools": ["Read", "Glob", "Grep"],
+  "model": "claude-opus-4-7",
+  "permission_mode": "default"
+}
+```
+
+- `sidecar_url`: 空ならフォーク全体の env (`OVERLEAF_CLAUDE_SIDECAR_URL`) を使う。
+  プロジェクトごとに別の sidecar に向けたい時だけ書く（例: SSH/Tailscale 先）
+- `experiment_repo`: sidecar ホスト側の絶対パス。Claude の cwd になる
+- `allowed_tools`: `Read/Glob/Grep` だけならコメント返信のみ。
+  `Edit/Write/Bash` を加えると実ファイル編集・実験実行が可能
+- `permission_mode`: `default` / `acceptEdits` / `plan` / `bypassPermissions`
+
+任意で `_claude/WRITING_GUIDE.md`, `_claude/FEEDBACK_LESSONS.md`,
+`_claude/related/*.tex` を置けば、自動でプロンプトに同梱される。
+
+### 4b. SSH 先 (Ubuntu + Tailscale) で sidecar を動かす
+
+実験リポジトリが Ubuntu サーバ上にある場合、その Ubuntu 上で sidecar を
+動かして `sidecar_url` で指す:
+
+```bash
+# Ubuntu 側で
+sudo apt-get install -y nodejs npm    # Node 22 系
+npm i -g @anthropic-ai/claude-code    # claude バイナリ
+claude /login                          # ブラウザで OAuth、サブスク認証
+
+git clone git@github.com:tktm04/overleaf.git
+cd overleaf/tools/claude-sidecar
+npm install
+PORT=8888 npm start                    # 127.0.0.1:8888 で待機
+# Tailscale 越しにアクセスしたい場合は --host 0.0.0.0 が必要なら server.mjs を編集
+```
+
+`/etc/systemd/system/claude-sidecar.service` 等で常駐化推奨。
+
+Mac 側の Overleaf プロジェクトの設定モーダルで:
+- **Sidecar URL**: `http://ubuntu-tailscale:8888`（Tailscale の MagicDNS 名）
+- **Experiment repo**: Ubuntu 側の絶対パス
+  例: `/home/tkdtmhs04/typography-jailbreak/papers/neurips2026`
+
+### 5. 動作確認
+
+1. プロジェクトの本文にコメントを残す（ネイティブのコメント機能）
+2. レビューパネル右上の Ask Claude（auto_awesome アイコン）をクリック
+3. 数十秒待つと該当 thread に Claude の返信が追加される
+
+### セッション
+
+同じプロジェクトで Ask Claude を押すたび、前回の Claude セッションを resume
+する（projectId → sessionId を sidecar が保存）。文脈をクリアしたい時:
+
+```bash
+curl -X POST http://127.0.0.1:8888/session/clear -H 'content-type: application/json' \
+  -d '{"projectId":"<overleaf project id>"}'
+```
+
+### ハマりどころ
+
+- **`host.docker.internal` が解決しない**: Docker Desktop on macOS は標準で解決
+  できる。Linux だと `--add-host=host.docker.internal:host-gateway` が必要
+- **`claude /login` がない**: `npm install -g @anthropic-ai/claude-code` または
+  Claude Code を最新版に
+- **sidecar から Permission denied**: `_claude/config.json` の `allowed_tools`
+  と `permission_mode` を見直す。読み取りだけにする時は `Read`/`Glob`/`Grep`
+  に絞ると安全
+
+## Server Pro 機能のロック解除（自分用）
+
+CE は Track Changes など一部機能をハードコードで OFF にしている
+(`ProjectEditorHandler.trackChangesAvailable = false` 等)。自分用の
+self-hosted 環境であれば AGPL 内で改造して有効化できる。
+
+`develop/dev.env` の `OVERLEAF_UNLOCK_PRO=true` を有効にし、`web` を再起動:
+
+```
+OVERLEAF_UNLOCK_PRO=true
+```
+
+これで Review Panel rail entry と Track Changes UI が CE でも表示される。
+商用 SaaS として再配布する場合は Overleaf 社のライセンスポリシー要確認。
+
 ## upstream 追従
 
 ```bash

@@ -236,6 +236,12 @@ module.exports = {
     chat: {
       internal_url: `http://${process.env.CHAT_HOST || '127.0.0.1'}:3010`,
     },
+    claudeReview: {
+      sidecarUrl:
+        process.env.OVERLEAF_CLAUDE_SIDECAR_URL ||
+        'http://host.docker.internal:8888',
+      defaultModel: process.env.OVERLEAF_CLAUDE_MODEL || 'claude-opus-4-7',
+    },
     filestore: {
       url: `http://${process.env.FILESTORE_HOST || '127.0.0.1'}:3009`,
     },

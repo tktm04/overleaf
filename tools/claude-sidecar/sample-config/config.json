@@ -1,0 +1,7 @@
+{
+  "experiment_repo": "/Users/tkdtmhs04/my_dev/typography-jailbreak/papers/neurips2026",
+  "allowed_tools": ["Read", "Glob", "Grep"],
+  "model": "claude-opus-4-7",
+  "permission_mode": "default",
+  "_comment": "Place this file at _claude/config.json inside your Overleaf project. allowed_tools = [Read, Glob, Grep] is the safe default (Claude can only inspect, not modify). Add 'Edit', 'Write', 'Bash' to let Claude actually change files and run commands."
+}
