@@ -110,6 +110,66 @@ $claude-text-muted: var(--neutral-60, #6b6b6b);
     line-height: 1.4;
     margin-bottom: 0.25rem;
   }
+
+  &__messages {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 0.45rem;
+  }
+
+  &__message {
+    background: $claude-bg;
+    border-radius: 4px;
+    padding: 0.35rem 0.5rem;
+    font-size: 12px;
+
+    &--claude {
+      background: $claude-orange-soft;
+    }
+  }
+
+  &__author {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $claude-text-muted;
+    margin-bottom: 0.15rem;
+  }
+
+  &__body {
+    color: var(--neutral-90, #222);
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &__reply {
+    margin-top: 0.3rem;
+  }
+
+  &__reply-input {
+    width: 100%;
+    resize: vertical;
+    min-height: 50px;
+    font-size: 12px;
+    padding: 0.35rem 0.45rem;
+    border: 1px solid $claude-border;
+    border-radius: 4px;
+
+    &:focus {
+      outline: 2px solid $claude-orange-soft;
+      outline-offset: -1px;
+      border-color: $claude-orange;
+    }
+  }
+
+  &__reply-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    margin-top: 0.3rem;
+  }
 }
 
 .claude-panel__body {
@@ -429,5 +489,116 @@ $claude-text-muted: var(--neutral-60, #6b6b6b);
     border: 5px solid transparent;
     border-top-color: $claude-orange;
     border-bottom: 0;
+  }
+}
+
+// Inline "Add comment" form rendered in the Claude rail when CodeMirror has
+// a pending review-comment range (i.e. the user clicked the in-editor
+// tooltip's "Add comment" or hit ⌘+Shift+C).
+.claude-pending-comment {
+  border: 1px solid $claude-orange;
+  border-radius: 6px;
+  padding: 0.55rem 0.6rem;
+  margin-bottom: 0.55rem;
+  background: $claude-orange-soft;
+
+  &__label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $claude-orange;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+  }
+
+  &__quote {
+    font-size: 11px;
+    color: var(--neutral-90, #222);
+    background: white;
+    padding: 0.3rem 0.45rem;
+    border-radius: 3px;
+    margin-bottom: 0.4rem;
+    max-height: 60px;
+    overflow: auto;
+    word-break: break-word;
+    font-family: var(--font-family-monospace, ui-monospace, monospace);
+  }
+
+  &__textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 50px;
+    font-size: 12px;
+    padding: 0.35rem 0.45rem;
+    border: 1px solid $claude-border;
+    border-radius: 4px;
+
+    &:focus {
+      outline: 2px solid $claude-orange-soft;
+      outline-offset: -1px;
+      border-color: $claude-orange;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+  }
+}
+
+.claude-pdf-comment-modal {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  z-index: 1080;
+  width: 320px;
+  background: white;
+  border: 1px solid $claude-border;
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+
+  &__quote {
+    font-size: 11px;
+    color: $claude-text-muted;
+    background: $claude-bg;
+    padding: 0.3rem 0.45rem;
+    border-radius: 4px;
+    border-left: 2px solid $claude-orange;
+    margin-bottom: 0.5rem;
+    max-height: 60px;
+    overflow: auto;
+    word-break: break-word;
+  }
+
+  &__textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 70px;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid $claude-border;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: inherit;
+
+    &:focus {
+      outline: 2px solid $claude-orange-soft;
+      outline-offset: -1px;
+      border-color: $claude-orange;
+    }
+  }
+
+  &__error {
+    margin-top: 0.4rem;
+    color: #b00;
+    font-size: 11px;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
   }
 }

@@ -5,6 +5,7 @@ import { ConfigureClaudeButton } from '@/features/review-panel/components/config
 import { PendingEditsList } from './pending-edits-list'
 import { ClaudeChatBox } from './claude-chat-box'
 import { ThreadsList } from './threads-list'
+import { ClaudePendingAddComment } from './claude-pending-add-comment'
 
 type Tab = 'comments' | 'chat'
 
@@ -63,6 +64,7 @@ const ClaudeRailPanel: FC = () => {
                 Apply or Skip.
               </div>
             </div>
+            <ClaudePendingAddComment />
             <ThreadsList onActiveChange={setActiveThreads} />
             <PendingEditsList />
           </>

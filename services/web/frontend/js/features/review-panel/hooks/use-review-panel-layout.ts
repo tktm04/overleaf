@@ -20,10 +20,13 @@ export default function useReviewPanelLayout(): {
     setIsOpen: setRailIsOpen,
   } = useRailContext()
 
+  // Fork: the Claude rail subsumes the Review pane. We never set
+  // selectedTab to 'review-panel' anymore, so the legacy review-panel UI
+  // stays hidden and only the Claude rail shows.
   const reviewPanelOpen = selectedRailTab === 'review-panel' && railIsOpen
 
   const openReviewPanel = useCallback(() => {
-    openRailTab('review-panel')
+    openRailTab('claude')
   }, [openRailTab])
 
   const closeReviewPanel = useCallback(() => {

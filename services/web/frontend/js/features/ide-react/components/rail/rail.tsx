@@ -117,11 +117,15 @@ export const RailLayout = () => {
         hide: !isOverleaf && !gitBridgeEnabled,
       },
       {
+        // Hidden — the Claude rail now hosts the comment-input flow too.
+        // We keep the entry registered so trackChangesVisible-gated state
+        // (ranges, threads providers) still mounts somewhere; the tab
+        // button is just suppressed.
         key: 'review-panel',
         icon: 'rate_review',
         title: t('review_panel'),
         component: null,
-        hide: !features.trackChangesVisible,
+        hide: true,
         disabled: view !== 'editor',
       },
       {

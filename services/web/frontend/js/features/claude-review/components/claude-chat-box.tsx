@@ -1,6 +1,7 @@
 import { FC, useEffect, useRef, useState } from 'react'
 import { useIdeReactContext } from '@/features/ide-react/context/ide-react-context'
 import { postJSON } from '@/infrastructure/fetch-json'
+import { ClaudeBadge } from './claude-badge'
 
 type Turn = { role: 'user' | 'assistant'; content: string }
 
@@ -77,7 +78,13 @@ export const ClaudeChatBox: FC = () => {
             className={`claude-chat__bubble claude-chat__bubble--${t.role}`}
           >
             <div className="claude-chat__bubble-author">
-              {t.role === 'user' ? 'you' : 'claude'}
+              {t.role === 'user' ? (
+                'you'
+              ) : (
+                <>
+                  <ClaudeBadge size={11} /> claude
+                </>
+              )}
             </div>
             <div className="claude-chat__bubble-body">{t.content}</div>
           </div>
