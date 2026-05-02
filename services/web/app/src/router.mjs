@@ -37,6 +37,7 @@ import StaticPagesRouter from './Features/StaticPages/StaticPagesRouter.mjs'
 import ChatController from './Features/Chat/ChatController.mjs'
 import ThreadsController from './Features/Chat/ThreadsController.mjs'
 import ClaudeReviewController from './Features/ClaudeReview/ClaudeReviewController.mjs'
+import ImportController from './Features/ClaudeReview/ImportController.mjs'
 import Modules from './infrastructure/Modules.mjs'
 import {
   RateLimiter,
@@ -1150,6 +1151,43 @@ async function initialize(webRouter, privateApiRouter, publicApiRouter) {
       AuthorizationMiddleware.ensureUserCanReadProject,
       PermissionsController.requirePermission('chat'),
       ClaudeReviewController.skipEdit
+    )
+    // Cross-origin import target for the overleaf.com bookmarklet. CORS
+    // headers are added by ImportController.corsMiddleware (it gates the
+    // allowed origins itself). Keep auth in place so a malicious site
+    // can't spoof: the user must be logged into the local fork too.
+    webRouter.options(
+      '/project/:project_id/claude/import-threads',
+      ImportController.corsMiddleware
+    )
+    webRouter.post(
+      '/project/:project_id/claude/import-threads',
+      ImportController.corsMiddleware,
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanWriteProjectContent,
+      PermissionsController.requirePermission('chat'),
+      ImportController.importThreads
+    )
+    webRouter.get(
+      '/project/:project_id/claude/sync/status',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanReadProject,
+      PermissionsController.requirePermission('chat'),
+      ClaudeReviewController.syncStatus
+    )
+    webRouter.post(
+      '/project/:project_id/claude/sync/pull',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanWriteProjectContent,
+      PermissionsController.requirePermission('chat'),
+      ClaudeReviewController.syncPull
+    )
+    webRouter.post(
+      '/project/:project_id/claude/sync/push',
+      AuthorizationMiddleware.blockRestrictedUserFromProject,
+      AuthorizationMiddleware.ensureUserCanWriteProjectContent,
+      PermissionsController.requirePermission('chat'),
+      ClaudeReviewController.syncPush
     )
   }
 

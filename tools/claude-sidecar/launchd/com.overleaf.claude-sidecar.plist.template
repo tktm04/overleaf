@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchAgent template for claude-sidecar.
+  install.sh substitutes __NODE_BIN__, __SIDECAR_DIR__, __HOME__ before
+  copying this file to ~/Library/LaunchAgents/.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.overleaf.claude-sidecar</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE_BIN__</string>
+    <string>__SIDECAR_DIR__/src/server.mjs</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__SIDECAR_DIR__</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key>
+    <string>__HOME__</string>
+    <key>PATH</key>
+    <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+    <key>HOST</key>
+    <string>127.0.0.1</string>
+    <key>PORT</key>
+    <string>8888</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+
+  <key>StandardOutPath</key>
+  <string>__HOME__/Library/Logs/claude-sidecar/out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>__HOME__/Library/Logs/claude-sidecar/err.log</string>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>

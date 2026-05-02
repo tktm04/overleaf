@@ -66,4 +66,25 @@ async function clearSession(projectId, override) {
   })
 }
 
-export default { runReview, clearSession }
+async function syncStatus({ repoPath, sidecarUrl: override }) {
+  return fetchJson(sidecarUrl('/sync/status', override), {
+    method: 'POST',
+    json: { repoPath },
+  })
+}
+
+async function syncPull({ repoPath, rebase, sidecarUrl: override }) {
+  return fetchJson(sidecarUrl('/sync/pull', override), {
+    method: 'POST',
+    json: { repoPath, rebase: !!rebase },
+  })
+}
+
+async function syncPush({ repoPath, message, sidecarUrl: override }) {
+  return fetchJson(sidecarUrl('/sync/push', override), {
+    method: 'POST',
+    json: { repoPath, message },
+  })
+}
+
+export default { runReview, clearSession, syncStatus, syncPull, syncPush }

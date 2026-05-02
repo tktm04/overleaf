@@ -1,10 +1,14 @@
 import express from 'express'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import { query } from '@anthropic-ai/claude-agent-sdk'
 import {
   getSessionId,
   setSessionId,
   clearSession,
 } from './session-store.mjs'
+
+const execFileP = promisify(execFile)
 
 const PORT = parseInt(process.env.PORT || '8888', 10)
 // Default to loopback. Set HOST=0.0.0.0 (or a Tailscale IP) when running on
@@ -126,6 +130,122 @@ app.post('/session/clear', async (req, res) => {
   if (!projectId) return res.status(400).json({ error: 'projectId required' })
   await clearSession(projectId)
   res.json({ ok: true })
+})
+
+// --------------------------------------------------------------------------
+// Git sync helpers
+//
+// The web service proxies /sync/{status,pull,push} from the Claude rail's
+// "Sync" section to here. We just shell out to git inside the project's
+// experiment_repo (the same path Claude operates in).
+
+function isPathSafe(p) {
+  return typeof p === 'string' && p.length > 0 && !p.includes('\0')
+}
+
+async function runGit(repoPath, args) {
+  const { stdout, stderr } = await execFileP('git', ['-C', repoPath, ...args], {
+    maxBuffer: 4 * 1024 * 1024,
+  })
+  return { stdout, stderr }
+}
+
+app.post('/sync/status', async (req, res) => {
+  const { repoPath } = req.body || {}
+  if (!isPathSafe(repoPath))
+    return res.status(400).json({ error: 'repoPath required' })
+  try {
+    const [porcelain, head, upstream] = await Promise.all([
+      runGit(repoPath, ['status', '--porcelain']).catch(() => ({ stdout: '' })),
+      runGit(repoPath, ['log', '-1', '--format=%h %ci %s']).catch(() => ({
+        stdout: '',
+      })),
+      runGit(repoPath, [
+        'for-each-ref',
+        '--format=%(upstream:short) %(upstream:track)',
+        'refs/heads',
+      ]).catch(() => ({ stdout: '' })),
+    ])
+    const dirty = porcelain.stdout
+      .split('\n')
+      .filter(line => line.trim().length > 0)
+    res.json({
+      ok: true,
+      dirty: dirty.length,
+      dirtyFiles: dirty.slice(0, 50),
+      head: head.stdout.trim(),
+      upstream: upstream.stdout.trim(),
+    })
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      error: err?.message || 'git status failed',
+      stderr: err?.stderr || '',
+    })
+  }
+})
+
+app.post('/sync/pull', async (req, res) => {
+  const { repoPath, rebase } = req.body || {}
+  if (!isPathSafe(repoPath))
+    return res.status(400).json({ error: 'repoPath required' })
+  try {
+    const args = rebase ? ['pull', '--rebase'] : ['pull', '--ff-only']
+    const { stdout, stderr } = await runGit(repoPath, args)
+    res.json({ ok: true, stdout, stderr })
+  } catch (err) {
+    res.status(409).json({
+      ok: false,
+      error: err?.message || 'git pull failed',
+      stdout: err?.stdout || '',
+      stderr: err?.stderr || '',
+    })
+  }
+})
+
+app.post('/sync/push', async (req, res) => {
+  const { repoPath, message } = req.body || {}
+  if (!isPathSafe(repoPath))
+    return res.status(400).json({ error: 'repoPath required' })
+  const commitMessage =
+    (typeof message === 'string' && message.trim()) ||
+    `Claude Review apply (${new Date().toISOString()})`
+  try {
+    const out = []
+    const stage = await runGit(repoPath, ['add', '-A'])
+    out.push(stage)
+    // Only commit if there's anything staged.
+    let committed = false
+    try {
+      const commit = await runGit(repoPath, [
+        'commit',
+        '-m',
+        commitMessage,
+      ])
+      out.push(commit)
+      committed = true
+    } catch (err) {
+      // exit 1 with "nothing to commit" is fine; rethrow others
+      if (!/nothing to commit/i.test(err?.stdout || '')) {
+        throw err
+      }
+    }
+    const push = await runGit(repoPath, ['push'])
+    out.push(push)
+    res.json({
+      ok: true,
+      committed,
+      stdout: out.map(o => o.stdout).join('\n'),
+      stderr: out.map(o => o.stderr).join('\n'),
+    })
+  } catch (err) {
+    res.status(409).json({
+      ok: false,
+      error: err?.message || 'git push failed',
+      stdout: err?.stdout || '',
+      stderr: err?.stderr || '',
+    })
+  }
 })
 
 app.listen(PORT, HOST, () => {

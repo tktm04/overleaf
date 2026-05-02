@@ -119,6 +119,26 @@ npm start          # 127.0.0.1:8888 で待ち受け
 
 別タブで動かしっぱなしにする。`npm run dev` だと watch モード。
 
+#### 2b. 自動起動にする（任意・推奨）
+
+毎回 `npm start` を打たなくて済むよう launchd に登録できる:
+
+```bash
+cd tools/claude-sidecar
+./launchd/install.sh
+```
+
+- `~/Library/LaunchAgents/com.overleaf.claude-sidecar.plist` が作成される
+- ログイン時に自動起動、クラッシュ時に再起動
+- ログ: `~/Library/Logs/claude-sidecar/{out,err}.log`
+- 動作確認: `curl http://127.0.0.1:8888/health`
+
+外す時:
+
+```bash
+./launchd/uninstall.sh
+```
+
 ### 3. Overleaf web の env 設定（既に dev.env に入っている）
 
 ```
@@ -203,6 +223,62 @@ curl -X POST http://127.0.0.1:8888/session/clear -H 'content-type: application/j
 - **sidecar から Permission denied**: `_claude/config.json` の `allowed_tools`
   と `permission_mode` を見直す。読み取りだけにする時は `Read`/`Glob`/`Grep`
   に絞ると安全
+
+## overleaf.com からコメントを取り込む（ブックマークレット）
+
+`tools/bookmarklets/import-overleaf-comments.js` のスクリプトをブックマークに
+登録し、overleaf.com を開いてる時にクリックすると、その project の未解決
+コメントスレッドを local fork に取り込める（先生が overleaf.com 側に残した
+コメントを取り込んで Claude に自動レビューさせる用途）。
+
+### 1. ブックマークレットを作る
+
+ソースを minify して `javascript:` を頭に付けた URL を、ブックマークの URL
+欄に貼る。例えば Node が使える環境なら:
+
+```bash
+npx -y terser \
+  tools/bookmarklets/import-overleaf-comments.js \
+  --compress --mangle | \
+  awk 'BEGIN{ORS=""}{print}' | \
+  pbcopy
+```
+
+これで `javascript:(async()=>{...})()` の最後まで圧縮された 1 行が
+クリップボードに入る。Mac なら頭に `javascript:` を付けて貼り付け。
+
+ブックマークバー（または任意のフォルダ）に `New Bookmark` で:
+
+- **Name**: `Import to Claude`
+- **URL**: `javascript:(...minified script...)`
+
+### 2. 使い方
+
+1. local fork を立ち上げ、対象 project を `http://localhost/project/<localId>`
+   で一度開いておく（CSRF token をブックマークレットが取りに来るため）
+2. overleaf.com の対象 project を開く
+3. ブックマークバーの **Import to Claude** をクリック
+4. 初回のみ:
+   - local-fork project id（`/project/` の後の id）
+   - local-fork base URL（デフォルト `http://localhost`）
+   を聞かれる。`localStorage` に保存される
+5. 結果が alert で出る: `Imported: N` / `Skipped: M`
+6. local fork の Claude rail Comments タブにスレッドが追加され、自動
+   レビューが走る
+
+### 3. 重複防止
+
+ブックマークレットを再度クリックしても、すでに取り込んだ thread には
+特殊マーカー `[overleaf-import:<remote_thread_id>]` が含まれているので
+スキップされる。新規コメントだけが取り込まれる。
+
+### 4. 制限事項
+
+- 現状 anchor（PDF/source 上の付着位置）は取得できない。本文中に
+  anchor_text が一致する箇所が 1 つだけあれば自動 anchoring を試みる
+  が、`/threads` API ではその情報が返らないため省略している
+- 戻し（local → overleaf.com）は git push で本文だけ反映する。コメント
+  自体を逆方向に流すには別の経路が必要
 
 ## Server Pro 機能のロック解除（自分用）
 

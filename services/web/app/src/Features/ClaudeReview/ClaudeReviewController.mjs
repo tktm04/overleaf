@@ -6,6 +6,7 @@ import ClaudeReviewManager from './ClaudeReviewManager.mjs'
 import EditorController from '../Editor/EditorController.mjs'
 import ProjectEntityHandler from '../Project/ProjectEntityHandler.mjs'
 import ContextBuilder from './ContextBuilder.mjs'
+import SidecarClient from './SidecarClient.mjs'
 import settings from '@overleaf/settings'
 
 const CONFIG_PATH = '/_claude/config.json'
@@ -165,6 +166,71 @@ async function skipEdit(req, res, next) {
   }
 }
 
+async function readSyncConfig(projectId) {
+  const ctx = await ContextBuilder.build(projectId)
+  if (!ctx.config) {
+    throw new Error('_claude/config.json missing — open ⚙ Configure Claude first')
+  }
+  let cfg
+  try {
+    cfg = JSON.parse(ctx.config)
+  } catch (err) {
+    throw new Error('_claude/config.json is not valid JSON: ' + err.message)
+  }
+  if (!cfg.experiment_repo) {
+    throw new Error('_claude/config.json must define experiment_repo')
+  }
+  return cfg
+}
+
+async function syncStatus(req, res, next) {
+  try {
+    const projectId = req.params.project_id || req.params.projectId
+    const cfg = await readSyncConfig(projectId)
+    const result = await SidecarClient.syncStatus({
+      repoPath: cfg.experiment_repo,
+      sidecarUrl: cfg.sidecar_url,
+    })
+    res.json(result)
+  } catch (err) {
+    res.status(409).json({ ok: false, error: err.message })
+  }
+}
+
+async function syncPull(req, res, next) {
+  try {
+    const projectId = req.params.project_id || req.params.projectId
+    const cfg = await readSyncConfig(projectId)
+    const result = await SidecarClient.syncPull({
+      repoPath: cfg.experiment_repo,
+      rebase: !!req.body?.rebase,
+      sidecarUrl: cfg.sidecar_url,
+    })
+    res.json(result)
+  } catch (err) {
+    res.status(409).json({ ok: false, error: err.message })
+  }
+}
+
+async function syncPush(req, res, next) {
+  try {
+    const projectId = req.params.project_id || req.params.projectId
+    const userId = SessionManager.getLoggedInUserId(req.session)
+    if (!userId) return res.status(401).json({ error: 'not authenticated' })
+    const cfg = await readSyncConfig(projectId)
+    const result = await SidecarClient.syncPush({
+      repoPath: cfg.experiment_repo,
+      message:
+        (req.body?.message || '').toString().trim() ||
+        `Claude Review apply by ${userId}`,
+      sidecarUrl: cfg.sidecar_url,
+    })
+    res.json(result)
+  } catch (err) {
+    res.status(409).json({ ok: false, error: err.message })
+  }
+}
+
 export default {
   review,
   chat,
@@ -173,4 +239,7 @@ export default {
   listEdits,
   applyEdit,
   skipEdit,
+  syncStatus,
+  syncPull,
+  syncPush,
 }

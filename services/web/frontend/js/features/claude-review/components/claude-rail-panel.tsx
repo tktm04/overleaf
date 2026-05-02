@@ -6,6 +6,8 @@ import { PendingEditsList } from './pending-edits-list'
 import { ClaudeChatBox } from './claude-chat-box'
 import { ThreadsList } from './threads-list'
 import { ClaudePendingAddComment } from './claude-pending-add-comment'
+import { ImportFromOverleafButton } from './import-from-overleaf-button'
+import { SyncSection } from './sync-section'
 
 type Tab = 'comments' | 'chat'
 
@@ -20,6 +22,7 @@ const ClaudeRailPanel: FC = () => {
         title="Claude"
         actions={
           <>
+            <ImportFromOverleafButton key="import-overleaf" />
             <ConfigureClaudeButton key="configure-claude" />
             <AskClaudeButton key="ask-claude" />
           </>
@@ -67,6 +70,7 @@ const ClaudeRailPanel: FC = () => {
             <ClaudePendingAddComment />
             <ThreadsList onActiveChange={setActiveThreads} />
             <PendingEditsList />
+            <SyncSection />
           </>
         )}
         {tab === 'chat' && (
