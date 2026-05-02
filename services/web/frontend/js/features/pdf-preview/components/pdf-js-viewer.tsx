@@ -17,6 +17,7 @@ import useMouseWheelZoom from '../hooks/use-mouse-wheel-zoom'
 import { PDFJS } from '../util/pdf-js'
 import { PDFFile } from '@ol-types/compile'
 import { PdfSelectionComment } from './pdf-selection-comment'
+import { PdfCommentMarkers } from './pdf-comment-markers'
 
 type PdfJsViewerProps = {
   url: string
@@ -532,6 +533,7 @@ function PdfJsViewer({ url, pdfFile }: PdfJsViewerProps) {
         />
       )}
       <PdfSelectionComment pdfJsWrapper={pdfJsWrapper} />
+      <PdfCommentMarkers pdfJsWrapper={pdfJsWrapper} />
     </div>
   )
 }

@@ -1,6 +1,8 @@
-import { FC, useCallback, useEffect, useState } from 'react'
+import { FC, useCallback, useEffect, useRef, useState } from 'react'
 import { useIdeReactContext } from '@/features/ide-react/context/ide-react-context'
 import { useConnectionContext } from '@/features/ide-react/context/connection-context'
+import { useEditorOpenDocContext } from '@/features/ide-react/context/editor-open-doc-context'
+import { useFileTreePathContext } from '@/features/file-tree/contexts/file-tree-path'
 import { getJSON, postJSON } from '@/infrastructure/fetch-json'
 
 type Edit = {
@@ -37,10 +39,20 @@ export const PendingEditsList: FC = () => {
       removeListener: (e: string, h: (...a: unknown[]) => void) => void
     }
   }
+  const { currentDocument } = useEditorOpenDocContext() as {
+    currentDocument: { doc_id?: string } | null | undefined
+  }
+  const { pathInFolder } = useFileTreePathContext() as {
+    pathInFolder: (id: string) => string | null
+  }
   const [edits, setEdits] = useState<Edit[]>([])
   const [loading, setLoading] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const dispatchedRef = useRef<{ edits: Edit[]; path: string | null }>({
+    edits: [],
+    path: null,
+  })
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -73,6 +85,25 @@ export const PendingEditsList: FC = () => {
       socket.removeListener('claude-edit-skipped', handler)
     }
   }, [socket, refresh])
+
+  // Broadcast edits + open-doc path to the source-editor extension
+  // (claude-pending-edits.ts) so it can render inline diff decorations.
+  useEffect(() => {
+    let path: string | null = null
+    const docId = currentDocument?.doc_id
+    if (docId && pathInFolder) {
+      const raw = pathInFolder(docId)
+      if (raw) path = raw.startsWith('/') ? raw : `/${raw}`
+    }
+    const prev = dispatchedRef.current
+    if (prev.path === path && prev.edits === edits) return
+    dispatchedRef.current = { edits, path }
+    window.dispatchEvent(
+      new CustomEvent('claude:pending-edits', {
+        detail: { projectId, currentDocPath: path, edits },
+      })
+    )
+  }, [edits, projectId, currentDocument, pathInFolder])
 
   const apply = async (id: string) => {
     setBusyId(id)

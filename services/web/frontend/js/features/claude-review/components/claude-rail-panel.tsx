@@ -8,6 +8,7 @@ import { ThreadsList } from './threads-list'
 import { ClaudePendingAddComment } from './claude-pending-add-comment'
 import { ImportFromOverleafButton } from './import-from-overleaf-button'
 import { SyncSection } from './sync-section'
+import { PermissionModeSwitcher } from './permission-mode-switcher'
 
 type Tab = 'comments' | 'chat'
 
@@ -67,6 +68,7 @@ const ClaudeRailPanel: FC = () => {
                 Apply or Skip.
               </div>
             </div>
+            <PermissionModeSwitcher />
             <ClaudePendingAddComment />
             <ThreadsList onActiveChange={setActiveThreads} />
             <PendingEditsList />

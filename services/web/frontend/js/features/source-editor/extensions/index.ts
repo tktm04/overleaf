@@ -54,6 +54,7 @@ import { ranges } from './ranges'
 import { historyOT } from './history-ot'
 import { trackDetachedComments } from './track-detached-comments'
 import { reviewTooltip } from './review-tooltip'
+import { claudePendingEdits } from './claude-pending-edits'
 import { tooltipsReposition } from './tooltips-reposition'
 import { selectionListener } from '@/features/source-editor/extensions/selection-listener'
 import { contextMenu } from './context-menu'
@@ -159,6 +160,7 @@ export const createExtensions = (options: Record<string, any>): Extension[] => [
   visual(options.visual),
   mathPreview(options.settings.mathPreview),
   reviewTooltip(options.editorContextMenuEnabled),
+  claudePendingEdits(),
   contextMenu(options.editorContextMenuEnabled),
   toolbarPanel(),
   breadcrumbPanel(),

@@ -517,6 +517,125 @@ $claude-text-muted: var(--neutral-60, #6b6b6b);
   }
 }
 
+// Inline diff rendered by source-editor/extensions/claude-pending-edits.ts
+.claude-inline-edit-del-line {
+  background: rgba(220, 0, 0, 0.05);
+}
+.claude-inline-edit-del {
+  background: rgba(220, 0, 0, 0.18);
+  text-decoration: line-through;
+  text-decoration-color: rgba(220, 0, 0, 0.6);
+}
+.claude-inline-edit {
+  display: block;
+  margin: 0.25rem 0 0.4rem 1.2rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid $claude-orange;
+  border-radius: 6px;
+  background: $claude-orange-soft;
+  font-family: inherit;
+
+  &__header {
+    font-size: 11px;
+    margin-bottom: 0.3rem;
+  }
+
+  &__badge {
+    background: $claude-orange;
+    color: white;
+    border-radius: 10px;
+    padding: 0.05rem 0.5rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+
+  &__rationale {
+    color: $claude-text-muted;
+  }
+
+  &__new-text {
+    margin: 0 0 0.45rem;
+    padding: 0.35rem 0.5rem;
+    background: white;
+    border: 1px solid $claude-border;
+    border-radius: 4px;
+    font-family: var(--font-family-monospace, ui-monospace, monospace);
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 160px;
+    overflow: auto;
+    color: #0a6;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.35rem;
+    justify-content: flex-end;
+  }
+}
+
+// Permission mode quick switcher
+.claude-mode-switcher {
+  margin-bottom: 0.6rem;
+
+  &__row {
+    display: flex;
+    gap: 0.25rem;
+    background: $claude-bg;
+    border: 1px solid $claude-border;
+    border-radius: 6px;
+    padding: 0.2rem;
+  }
+
+  &__btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: $claude-text-muted;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    &:hover:not(:disabled) {
+      color: var(--neutral-90, #222);
+    }
+    &--active {
+      background: white;
+      color: $claude-orange;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+// Marker overlay rendered by pdf-comment-markers.tsx
+.claude-pdf-marker-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none; // children re-enable
+  z-index: 4;
+}
+.claude-pdf-marker {
+  position: absolute;
+  background: rgba(217, 119, 87, 0.22);
+  border-bottom: 2px solid $claude-orange;
+  cursor: pointer;
+  pointer-events: auto;
+
+  &:hover {
+    background: rgba(217, 119, 87, 0.35);
+  }
+}
+
 .claude-help-banner {
   margin-top: 1rem;
   padding: 0.55rem 0.7rem;
